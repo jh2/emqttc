@@ -25,6 +25,23 @@
 %%%-----------------------------------------------------------------------------
 
 %%------------------------------------------------------------------------------
+%% Logging wrappers
+%%------------------------------------------------------------------------------
+
+%% this macro only exists in OTP21 and above where logger already exists
+-ifdef(OTP_RELEASE).
+-define(debug(Message, Opts), logger:debug(Message, Opts)).
+-define(info(Message, Opts), logger:info(Message, Opts)).
+-define(warn(Message, Opts), logger:warning(Message, Opts)).
+-define(error(Message, Opts), logger:error(Message, Opts)).
+-else.
+-define(debug(Message, Opts), error_logger:info_msg(Message, Opts)).
+-define(info(Message, Opts), error_logger:info_msg(Message, Opts)).
+-define(warn(Message, Opts), error_logger:warning_msg(Message, Opts)).
+-define(error(Message, Opts), error_logger:error_msg(Message, Opts)).
+-endif.
+
+%%------------------------------------------------------------------------------
 %% MQTT Protocol Version and Levels
 %%------------------------------------------------------------------------------
 -define(MQTT_PROTO_V31, 3).
@@ -43,6 +60,7 @@
 -define(QOS_0, 0).
 -define(QOS_1, 1).
 -define(QOS_2, 2).
+-define(QOS_UNAUTHORIZED, 128).
 
 -define(IS_QOS(I), (I >= ?QOS_0 andalso I =< ?QOS_2)).
 
@@ -207,7 +225,7 @@
     #mqtt_packet{header   = #mqtt_packet_header{type = ?PUBREL, qos = ?QOS_1},
                  variable = #mqtt_packet_puback{packet_id = PacketId}}).
 
--define(SUBSCRIBE_PACKET(PacketId, TopicTable), 
+-define(SUBSCRIBE_PACKET(PacketId, TopicTable),
     #mqtt_packet{header = #mqtt_packet_header{type = ?SUBSCRIBE, qos = ?QOS_1},
                  variable = #mqtt_packet_subscribe{packet_id   = PacketId,
                                                    topic_table = TopicTable}}).
@@ -215,7 +233,7 @@
     #mqtt_packet{header = #mqtt_packet_header{type = ?SUBACK},
                  variable = #mqtt_packet_suback{packet_id = PacketId,
                                                 qos_table = QosTable}}).
--define(UNSUBSCRIBE_PACKET(PacketId, Topics), 
+-define(UNSUBSCRIBE_PACKET(PacketId, Topics),
     #mqtt_packet{header = #mqtt_packet_header{type = ?UNSUBSCRIBE, qos = ?QOS_1},
                  variable = #mqtt_packet_unsubscribe{packet_id = PacketId,
                                                      topics    = Topics}}).
